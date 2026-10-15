@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON 618 Supermassive Black Hole - 4K Interactive Wallpaper</title>
+    <!-- Tailwind CSS for futuristic UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for futuristic sci-fi icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js R128 core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Three.js Post-Processing Shaders & Composer -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #010204;
+            color: #f3f4f6;
+            overflow: hidden;
+            user-select: none;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(10, 12, 24, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+        .glass-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+        }
+        .glass-button.active {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: rgba(245, 158, 11, 0.6);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+        input[type=range] {
+            accent-color: #f59e0b;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+        .ui-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.98);
+            transition: all 0.4s ease-in-out;
+        }
+        .ui-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            transition: all 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen">
+
+    <!-- 3D Interactive WebGL Wallpaper Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- HUD Overlay & User Interface -->
+    <div id="ui-container" class="relative z-10 w-full h-full flex flex-col justify-between p-4 md:p-6 pointer-events-none ui-visible">
+        
+        <!-- Top Navigation Bar -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pointer-events-auto">
+            <div class="glass-panel px-5 py-3 rounded-2xl flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-orbitron font-bold text-lg shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-circle-dot animate-spin" style="animation-duration: 15s;"></i>
+                </div>
+                <div>
+                    <h1 class="font-orbitron font-extrabold tracking-wider text-lg md:text-xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-400 to-red-500">
+                        TON 618
+                    </h1>
+                    <p class="text-xs text-gray-400 font-medium">Ultra-Massive Quasar • 66 Billion Solar Masses</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="toggle-stats" class="glass-button px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-gray-200 pointer-events-auto">
+                    <i class="fa-solid fa-chart-pie text-amber-400"></i>
+                    <span>Telemetry</span>
+                </button>
+                <button id="toggle-controls" class="glass-button px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-gray-200 pointer-events-auto">
+                    <i class="fa-solid fa-sliders text-amber-400"></i>
+                    <span>Controls</span>
+                </button>
+                <button id="btn-snapshot" class="glass-button px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-amber-300 pointer-events-auto">
+                    <i class="fa-solid fa-camera"></i>
+                    <span class="hidden sm:inline">Snapshot</span>
+                </button>
+                <button id="btn-hide-ui" class="glass-button bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/50 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-amber-300 pointer-events-auto" title="Hide UI for clean wallpaper view">
+                    <i class="fa-solid fa-eye-slash"></i>
+                    <span class="hidden sm:inline">Clean View</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace: Telescopic Info & Control Panels -->
+        <div class="flex flex-col lg:flex-row justify-between items-end gap-6 my-auto pointer-events-none">
+            
+            <!-- Left Info Panel: TON 618 Statistics -->
+            <div id="stats-panel" class="glass-panel w-full lg:w-96 p-5 rounded-2xl pointer-events-auto transition-all duration-300">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+                    <h3 class="font-orbitron font-bold text-sm tracking-wide text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-satellite-dish"></i> ASTROPHYSICAL DATA
+                    </h3>
+                    <span class="px-2 py-0.5 bg-red-500/20 border border-red-500/40 text-red-400 text-xs rounded-full font-mono">ACTIVE QUASAR</span>
+                </div>
+                <div class="space-y-3.5 text-sm">
+                    <div class="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span class="text-gray-400 font-medium">Mass (Solar Masses):</span>
+                        <span class="font-orbitron font-bold text-amber-300">6.6 × 10¹⁰ M☉</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span class="text-gray-400 font-medium">Schwarzschild Radius:</span>
+                        <span class="font-orbitron font-bold text-gray-200">~1,300 AU (~0.2 ly)</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span class="text-gray-400 font-medium">Bolometric Luminosity:</span>
+                        <span class="font-orbitron font-bold text-orange-400">1.4 × 10⁴⁰ Watts</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span class="text-gray-400 font-medium">Distance from Earth:</span>
+                        <span class="font-orbitron font-bold text-gray-200">18.2 Billion Ly</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span class="text-gray-400 font-medium">Constellation:</span>
+                        <span class="font-orbitron font-bold text-gray-200">Canes Venatici</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Control Panel: Wallpaper Customization -->
+            <div id="controls-panel" class="glass-panel w-full lg:w-96 p-5 rounded-2xl pointer-events-auto transition-all duration-300">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+                    <h3 class="font-orbitron font-bold text-sm tracking-wide text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i> WALLPAPER CONFIG
+                    </h3>
+                    <button id="btn-reset" class="text-xs text-gray-400 hover:text-white underline">Reset Defaults</button>
+                </div>
+                
+                <div class="space-y-4 text-sm">
+                    <!-- Color Themes -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Accretion Disk Palette</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button class="theme-btn py-2 rounded-xl text-xs font-bold border border-amber-500/50 bg-amber-600/30 text-amber-200 active" data-theme="orange">Classic</button>
+                            <button class="theme-btn py-2 rounded-xl text-xs font-bold border border-purple-500/50 bg-purple-600/30 text-purple-200" data-theme="purple">Cosmic</button>
+                            <button class="theme-btn py-2 rounded-xl text-xs font-bold border border-cyan-500/50 bg-cyan-600/30 text-cyan-200" data-theme="hyper">Hyper</button>
+                            <button class="theme-btn py-2 rounded-xl text-xs font-bold border border-red-500/50 bg-red-600/30 text-red-200" data-theme="void">Void</button>
+                        </div>
+                    </div>
+
+                    <!-- Sliders -->
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-400">Starfield Density</span>
+                                <span id="val-stars" class="font-mono text-amber-400">8,000</span>
+                            </div>
+                            <input id="range-stars" type="range" min="1000" max="15000" step="500" value="8000" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-400">Accretion Disk Spin Speed</span>
+                                <span id="val-speed" class="font-mono text-amber-400">1.0x</span>
+                            </div>
+                            <input id="range-speed" type="range" min="0" max="3" step="0.2" value="1.0" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-gray-400">Bloom Glow Intensity</span>
+                                <span id="val-bloom" class="font-mono text-amber-400">1.5</span>
+                            </div>
+                            <input id="range-bloom" type="range" min="0.2" max="3.0" step="0.2" value="1.5" class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- Toggle Switches -->
+                    <div class="pt-2 border-t border-white/10 grid grid-cols-2 gap-3">
+                        <button id="toggle-orbit" class="glass-button py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 active">
+                            <i class="fa-solid fa-rotate text-amber-400"></i> Auto-Rotate
+                        </button>
+                        <button id="toggle-jets" class="glass-button py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 active">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Plasma Jets
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer / Interaction Hint -->
+        <footer class="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400 pointer-events-auto">
+            <div class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
+                <i class="fa-solid fa-hand-pointer text-amber-400 animate-bounce"></i>
+                <span>Left click & drag to orbit • Right click to pan • Scroll to zoom</span>
+            </div>
+            <div class="font-orbitron tracking-wider text-amber-500/80">
+                TON 618 SIMULATION v4.3 • 4K BLOOM RENDERER
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 glass-panel px-5 py-3 rounded-2xl text-sm font-medium text-amber-300 border border-amber-500/30 opacity-0 pointer-events-none transition-all duration-300 shadow-2xl flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-amber-400"></i>
+        <span id="toast-msg">Settings updated successfully!</span>
+    </div>
+
+    <!-- JavaScript Application Core -->
+    <script>
+        // --- Application State ---
+        const state = {
+            theme: 'orange',
+            starCount: 8000,
+            diskSpeed: 1.0,
+            bloomIntensity: 1.5,
+            autoRotate: true,
+            relativisticJets: true,
+            uiVisible: true
+        };
+
+        // Theme Color Palettes
+        const themes = {
+            orange: { inner: 0xffffff, mid: 0xffaa22, outer: 0xff3300 },
+            purple: { inner: 0xffffff, mid: 0xaa44ff, outer: 0x5500aa },
+            hyper:  { inner: 0xffffff, mid: 0x00ccff, outer: 0x0033ff },
+            void:   { inner: 0xffffff, mid: 0xff2222, outer: 0x660000 }
+        };
+
+        // --- Three.js Scene Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x010204);
+        scene.fog = new THREE.FogExp2(0x010204, 0.0012);
+
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 5000);
+        camera.position.set(0, 45, 200);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        // --- OrbitControls Configuration (Black Hole stays fixed at origin [0,0,0]) ---
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 600;
+        controls.minDistance = 60;
+        controls.target.set(0, 0, 0);
+
+        // --- Post-Processing Bloom Effect Pipeline ---
+        const renderScene = new THREE.RenderPass(scene, camera);
+        const bloomPass = new THREE.UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            state.bloomIntensity, // strength
+            0.4, // radius
+            0.15 // threshold
+        );
+
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- Starfield Generation ---
+        let starField;
+        function createStarfield(count) {
+            if (starField) scene.remove(starField);
+
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+
+            const colorPalette = [
+                new THREE.Color(0xffffff),
+                new THREE.Color(0x9db4ff),
+                new THREE.Color(0xbbccff),
+                new THREE.Color(0xffcc88),
+                new THREE.Color(0xff7755)
+            ];
+
+            for (let i = 0; i < count * 3; i += 3) {
+                const u = Math.random();
+                const v = Math.random();
+                const theta = u * 2.0 * Math.PI;
+                const phi = Math.acos(2.0 * v - 1.0);
+                const r = 500 + Math.random() * 1500;
+
+                positions[i]     = r * Math.sin(phi) * Math.cos(theta);
+                positions[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+                positions[i + 2] = r * Math.cos(phi);
+
+                const col = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                colors[i]     = col.r;
+                colors[i + 1] = col.g;
+                colors[i + 2] = col.b;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 2.5,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending
+            });
+
+            starField = new THREE.Points(geometry, material);
+            scene.add(starField);
+        }
+        createStarfield(state.starCount);
+
+        // --- Nebulae Dust Clouds ---
+        const nebulaeGroup = new THREE.Group();
+        function createNebulae() {
+            const particleCount = 1200;
+            const geom = new THREE.BufferGeometry();
+            const pos = new Float32Array(particleCount * 3);
+            const col = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 120 + Math.random() * 450;
+                pos[i]     = Math.cos(angle) * dist;
+                pos[i + 1] = (Math.random() - 0.5) * 100;
+                pos[i + 2] = Math.sin(angle) * dist;
+
+                col[i]     = 0.15 + Math.random() * 0.25;
+                col[i + 1] = 0.08 + Math.random() * 0.15;
+                col[i + 2] = 0.35 + Math.random() * 0.35;
+            }
+
+            geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+
+            const mat = new THREE.PointsMaterial({
+                size: 18,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.12,
+                blending: THREE.AdditiveBlending
+            });
+
+            const neb = new THREE.Points(geom, mat);
+            nebulaeGroup.add(neb);
+            scene.add(nebulaeGroup);
+        }
+        createNebulae();
+
+        // --- Black Hole Construction (Fixed at [0,0,0]) ---
+        const blackHoleGroup = new THREE.Group();
+        scene.add(blackHoleGroup);
+
+        // 1. Event Horizon Core (Absolute pitch black)
+        const eventHorizonGeo = new THREE.SphereGeometry(24, 64, 64);
+        const eventHorizonMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const eventHorizon = new THREE.Mesh(eventHorizonGeo, eventHorizonMat);
+        blackHoleGroup.add(eventHorizon);
+
+        // 2. Photon Sphere Lensing Halo
+        const photonGeo = new THREE.RingGeometry(24.5, 29, 64);
+        const photonMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.95,
+            blending: THREE.AdditiveBlending
+        });
+        const photonSphere = new THREE.Mesh(photonGeo, photonMat);
+        photonSphere.rotation.x = Math.PI / 2;
+        blackHoleGroup.add(photonSphere);
+
+        // 3. Accretion Disk (Keplerian Particle Rotation)
+        const diskGroup = new THREE.Group();
+        blackHoleGroup.add(diskGroup);
+
+        const diskParticlesCount = 7000;
+        const diskGeo = new THREE.BufferGeometry();
+        const diskPos = new Float32Array(diskParticlesCount * 3);
+        const diskCol = new Float32Array(diskParticlesCount * 3);
+        const diskSpeeds = new Float32Array(diskParticlesCount);
+
+        for (let i = 0; i < diskParticlesCount; i++) {
+            const i3 = i * 3;
+            const radius = 30 + Math.random() * 130;
+            const angle = Math.random() * Math.PI * 2;
+
+            diskPos[i3]     = Math.cos(angle) * radius;
+            diskPos[i3 + 1] = (Math.random() - 0.5) * (16 * (1 - radius / 160));
+            diskPos[i3 + 2] = Math.sin(angle) * radius;
+
+            diskSpeeds[i] = (1.8 / Math.sqrt(radius)) * 3.0;
+        }
+
+        diskGeo.setAttribute('position', new THREE.BufferAttribute(diskPos, 3));
+        diskGeo.setAttribute('color', new THREE.BufferAttribute(diskCol, 3));
+
+        function updateDiskColors(themeKey) {
+            const t = themes[themeKey];
+            if (!t) return;
+            
+            const iCol = new THREE.Color(t.inner);
+            const mCol = new THREE.Color(t.mid);
+            const oCol = new THREE.Color(t.outer);
+
+            const poss = diskGeo.attributes.position.array;
+            const cols = diskGeo.attributes.color.array;
+
+            for (let i = 0; i < diskParticlesCount; i++) {
+                const i3 = i * 3;
+                const radius = Math.sqrt(poss[i3]*poss[i3] + poss[i3+2]*poss[i3+2]);
+                const mixCol = new THREE.Color();
+
+                if (radius < 55) {
+                    mixCol.lerpColors(iCol, mCol, Math.max(0, Math.min(1, (radius - 30) / 25)));
+                } else {
+                    mixCol.lerpColors(mCol, oCol, Math.max(0, Math.min(1, (radius - 55) / 105)));
+                }
+
+                cols[i3]     = mixCol.r;
+                cols[i3 + 1] = mixCol.g;
+                cols[i3 + 2] = mixCol.b;
+            }
+            diskGeo.attributes.color.needsUpdate = true;
+            photonMat.color.setHex(t.inner);
+        }
+
+        updateDiskColors(state.theme);
+
+        const diskMat = new THREE.PointsMaterial({
+            size: 2.4,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending
+        });
+
+        const diskPoints = new THREE.Points(diskGeo, diskMat);
+        diskGroup.add(diskPoints);
+        diskGroup.rotation.z = 0.28; // Cinematic tilt
+
+        // 4. Relativistic Jets
+        const jetsGroup = new THREE.Group();
+        blackHoleGroup.add(jetsGroup);
+
+        const jetParticleCount = 2000;
+        const jetGeo = new THREE.BufferGeometry();
+        const jetPos = new Float32Array(jetParticleCount * 3);
+        const jetCol = new Float32Array(jetParticleCount * 3);
+
+        for (let i = 0; i < jetParticleCount; i++) {
+            const i3 = i * 3;
+            const isTop = Math.random() > 0.5;
+            const heightDir = isTop ? 1 : -1;
+            const h = Math.random() * 380;
+            const spread = (h / 380) * 20 + Math.random() * 4;
+            const angle = Math.random() * Math.PI * 2;
+
+            jetPos[i3]     = Math.cos(angle) * spread;
+            jetPos[i3 + 1] = heightDir * (28 + h);
+            jetPos[i3 + 2] = Math.sin(angle) * spread;
+
+            jetCol[i3]     = 0.5;
+            jetCol[i3 + 1] = 0.75;
+            jetCol[i3 + 2] = 1.0;
+        }
+
+        jetGeo.setAttribute('position', new THREE.BufferAttribute(jetPos, 3));
+        jetGeo.setAttribute('color', new THREE.BufferAttribute(jetCol, 3));
+
+        const jetMat = new THREE.PointsMaterial({
+            size: 2.2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.75,
+            blending: THREE.AdditiveBlending
+        });
+
+        const jetPoints = new THREE.Points(jetGeo, jetMat);
+        jetsGroup.add(jetPoints);
+
+        // --- Window Resize ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- Animation Loop ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const dt = clock.getDelta();
+            const elapsedTime = clock.getElapsedTime();
+
+            // Update OrbitControls damping
+            controls.update();
+
+            // Auto-orbit camera around origin if enabled
+            if (state.autoRotate) {
+                const angle = dt * 0.15;
+                const x = camera.position.x;
+                const z = camera.position.z;
+                camera.position.x = x * Math.cos(angle) - z * Math.sin(angle);
+                camera.position.z = x * Math.sin(angle) + z * Math.cos(angle);
+                camera.lookAt(0, 0, 0);
+            }
+
+            // Rotate starfield slowly
+            if (starField) {
+                starField.rotation.y = elapsedTime * 0.012;
+            }
+
+            // Rotate accretion disk particles
+            const positions = diskGeo.attributes.position.array;
+            for (let i = 0; i < diskParticlesCount; i++) {
+                const i3 = i * 3;
+                let x = positions[i3];
+                let z = positions[i3 + 2];
+
+                const speed = diskSpeeds[i] * dt * 2.2 * state.diskSpeed;
+                const cos = Math.cos(speed);
+                const sin = Math.sin(speed);
+
+                positions[i3]     = x * cos - z * sin;
+                positions[i3 + 2] = x * sin + z * cos;
+            }
+            diskGeo.attributes.position.needsUpdate = true;
+
+            // Animate polar jets
+            jetsGroup.rotation.y = elapsedTime * 0.6 * state.diskSpeed;
+
+            // Render with Bloom composer
+            composer.render();
+        }
+        animate();
+
+        // --- UI Interactions & Event Handlers ---
+
+        // Toggle Stats Panel
+        const statsPanel = document.getElementById('stats-panel');
+        document.getElementById('toggle-stats').addEventListener('click', () => {
+            statsPanel.classList.toggle('hidden');
+        });
+
+        // Toggle Controls Panel
+        const controlsPanel = document.getElementById('controls-panel');
+        document.getElementById('toggle-controls').addEventListener('click', () => {
+            controlsPanel.classList.toggle('hidden');
+        });
+
+        // Clean View / Hide UI
+        const uiContainer = document.getElementById('ui-container');
+        const btnHideUi = document.getElementById('btn-hide-ui');
+        let uiHidden = false;
+
+        btnHideUi.addEventListener('click', () => {
+            uiHidden = !uiHidden;
+            if (uiHidden) {
+                uiContainer.classList.remove('ui-visible');
+                uiContainer.classList.add('ui-hidden');
+                showToast("Clean Wallpaper Mode Enabled. Click anywhere to restore UI.");
+            }
+        });
+
+        window.addEventListener('click', (e) => {
+            if (uiHidden && !e.target.closest('#ui-container')) {
+                uiHidden = false;
+                uiContainer.classList.remove('ui-hidden');
+                uiContainer.classList.add('ui-visible');
+            }
+        });
+
+        // Theme Palettes
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                themeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const themeName = btn.getAttribute('data-theme');
+                state.theme = themeName;
+                updateDiskColors(themeName);
+                showToast(`Applied ${btn.textContent} color palette`);
+            });
+        });
+
+        // Starfield Density Slider
+        const rangeStars = document.getElementById('range-stars');
+        const valStars = document.getElementById('val-stars');
+        rangeStars.addEventListener('input', (e) => {
+            const count = parseInt(e.target.value);
+            valStars.textContent = count.toLocaleString();
+            createStarfield(count);
+        });
+
+        // Disk Speed Slider
+        const rangeSpeed = document.getElementById('range-speed');
+        const valSpeed = document.getElementById('val-speed');
+        rangeSpeed.addEventListener('input', (e) => {
+            state.diskSpeed = parseFloat(e.target.value);
+            valSpeed.textContent = state.diskSpeed.toFixed(1) + 'x';
+        });
+
+        // Bloom Intensity Slider
+        const rangeBloom = document.getElementById('range-bloom');
+        const valBloom = document.getElementById('val-bloom');
+        rangeBloom.addEventListener('input', (e) => {
+            state.bloomIntensity = parseFloat(e.target.value);
+            valBloom.textContent = state.bloomIntensity.toFixed(1);
+            bloomPass.strength = state.bloomIntensity;
+        });
+
+        // Toggle Auto-Rotate
+        const toggleOrbitBtn = document.getElementById('toggle-orbit');
+        toggleOrbitBtn.addEventListener('click', () => {
+            state.autoRotate = !state.autoRotate;
+            toggleOrbitBtn.classList.toggle('active', state.autoRotate);
+            showToast(`Auto-Rotate: ${state.autoRotate ? 'Enabled' : 'Disabled'}`);
+        });
+
+        // Toggle Jets
+        const toggleJetsBtn = document.getElementById('toggle-jets');
+        toggleJetsBtn.addEventListener('click', () => {
+            state.relativisticJets = !state.relativisticJets;
+            jetsGroup.visible = state.relativisticJets;
+            toggleJetsBtn.classList.toggle('active', state.relativisticJets);
+            showToast(`Plasma Jets: ${state.relativisticJets ? 'Visible' : 'Hidden'}`);
+        });
+
+        // Snapshot Download Button
+        document.getElementById('btn-snapshot').addEventListener('click', () => {
+            uiContainer.classList.remove('ui-visible');
+            uiContainer.classList.add('ui-hidden');
+
+            setTimeout(() => {
+                composer.render();
+                const dataURL = renderer.domElement.toDataURL('image/png');
+                
+                const link = document.createElement('a');
+                link.download = 'TON_618_4K_Wallpaper.png';
+                link.href = dataURL;
+                link.click();
+
+                uiContainer.classList.remove('ui-hidden');
+                uiContainer.classList.add('ui-visible');
+                showToast("4K Wallpaper snapshot downloaded!");
+            }, 300);
+        });
+
+        // Reset Defaults
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            state.theme = 'orange';
+            state.starCount = 8000;
+            state.diskSpeed = 1.0;
+            state.bloomIntensity = 1.5;
+            state.autoRotate = true;
+            state.relativisticJets = true;
+
+            rangeStars.value = 8000;
+            valStars.textContent = '8,000';
+            rangeSpeed.value = 1.0;
+            valSpeed.textContent = '1.0x';
+            rangeBloom.value = 1.5;
+            valBloom.textContent = '1.5';
+            bloomPass.strength = 1.5;
+
+            themeButtons.forEach(b => b.classList.remove('active'));
+            themeButtons[0].classList.add('active');
+            updateDiskColors('orange');
+            createStarfield(8000);
+            jetsGroup.visible = true;
+            toggleJetsBtn.classList.add('active');
+            toggleOrbitBtn.classList.add('active');
+            camera.position.set(0, 45, 200);
+            controls.target.set(0, 0, 0);
+
+            showToast("Settings reset to defaults.");
+        });
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 20px)';
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
